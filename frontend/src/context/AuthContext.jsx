@@ -7,7 +7,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [authTokens, setAuthTokens] = useState(() =>
-    localStorage.getItem('access') ? JSON.parse(localStorage.getItem('access')) : null
+    localStorage.getItem('access_token') ? JSON.parse(localStorage.getItem('access_token')) : null
   );
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,11 +18,15 @@ export const AuthProvider = ({ children }) => {
         username,
         password,
       });
+      if (response.status !== 200) {
+        throw new Error('Login failed');
+      }
       setAuthTokens(response.data);
-      localStorage.setItem('access', JSON.stringify(response.data));
+      localStorage.setItem('access_token', JSON.stringify(response.data));
       setUser(response.data.user);
+      console.log('Login Response:', response.data);
     } catch (err) {
-      console.error(err);
+      console.error('Login Error:', err);
       throw err; // Re-throw the error to handle it in the component
     }
   };
@@ -30,18 +34,19 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setAuthTokens(null);
     setUser(null);
-    localStorage.removeItem('access');
+    localStorage.removeItem('access_token');
   };
 
   const updateToken = async () => {
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/token/refresh/`, {
-        refresh: localStorage.getItem('refresh'),
+        refresh: authTokens.refresh, // Ensure you are using the correct refresh token
       });
       setAuthTokens(response.data);
-      localStorage.setItem('access', JSON.stringify(response.data));
+      localStorage.setItem('access_token', JSON.stringify(response.data));
+      console.log('Refresh Token Response:', response.data);
     } catch (err) {
-      console.error(err);
+      console.error('Refresh Token Error:', err);
       logout();
     }
   };
@@ -70,8 +75,9 @@ export const AuthProvider = ({ children }) => {
           },
         });
         setUser(response.data);
+        console.log('User Profile Response:', response.data);
       } catch (err) {
-        console.error(err);
+        console.error('Get Profile Error:', err);
         logout();
       } finally {
         setLoading(false);

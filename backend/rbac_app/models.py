@@ -1,7 +1,4 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.utils.translation import gettext_lazy as _
 
@@ -29,7 +26,7 @@ class User(AbstractUser):
         related_query_name='user',
     )
 
-class File(models.Model):  # <-- Ensure this exists
+class File(models.Model):
     name = models.CharField(max_length=255)
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
     allowed_roles = models.JSONField(default=list)
